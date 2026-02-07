@@ -9,11 +9,13 @@ import UsersTable from "./components/UsersTable";
 
 function Logout() {
   localStorage.clear()
+  sessionStorage.clear()
   return <Navigate to="/login" />
 }
 
 function RegisterAndLogout() {
   localStorage.clear()
+  sessionStorage.clear()
   return <Register />
 }
 
@@ -24,15 +26,19 @@ function App() {
         <Route
           path="/"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly={false}>
               <Home />
             </ProtectedRoute>
           }
         />
         <Route
-                    path="/users"
-                    element={<ProtectedRoute><UsersTable /></ProtectedRoute>}
-                />
+          path="/users"
+          element={
+            <ProtectedRoute adminOnly={true}>
+              <UsersTable />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/register" element={<RegisterAndLogout />} />

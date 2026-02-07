@@ -1,17 +1,14 @@
-from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import *
+from django.contrib.auth.models import User
+from .models import UserProfile, Note
 from django.utils import timezone
 from datetime import timedelta
 
 class NoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Note
-        fields = ["id", "title", "content", "created_at", "author"]
-        extra_kwargs = {"author": {"read_only": True}}
-        
-        
-        
+        fields = ['id', 'title', 'content', 'created_at']
+
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
@@ -25,7 +22,7 @@ class UserDetailedSerializer(serializers.ModelSerializer):
     is_currently_active = serializers.SerializerMethodField()
     registration_date = serializers.SerializerMethodField()
     last_login_display = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = User
         fields = [
@@ -33,6 +30,8 @@ class UserDetailedSerializer(serializers.ModelSerializer):
             'username',
             'email',
             'is_active',
+            'is_staff',
+            'is_superuser',
             'last_login',
             'date_joined',
             'profile',
@@ -52,19 +51,16 @@ class UserDetailedSerializer(serializers.ModelSerializer):
             return None
 
     def get_notes_count(self, obj):
-        count = obj.notes.count()
-        print(f"{obj.username} has {count} notes")
-        return count
-    
+        return obj.notes.count()
+
     def get_is_currently_active(self, obj):
         try:
             profile = obj.profile
             if profile and profile.last_login_custom:
                 is_active = timezone.now() - profile.last_login_custom < timedelta(minutes=15)
-                print(f"🟢 {obj.username} is {'ACTIVE' if is_active else 'INACTIVE'}")
                 return is_active
-        except Exception as e:
-            print(f"Error checking active status for {obj.username}: {e}")
+        except:
+            pass
         return False
 
     def get_inactive_duration(self, obj):
@@ -77,18 +73,15 @@ class UserDetailedSerializer(serializers.ModelSerializer):
                 minutes = (delta.seconds % 3600) // 60
 
                 if days > 0:
-                    duration = f"{days}d {hours}h ago"
+                    return f"{days}d {hours}h ago"
                 elif hours > 0:
-                    duration = f"{hours}h {minutes}m ago"
+                    return f"{hours}h {minutes}m ago"
                 else:
-                    duration = f"{minutes}m ago"
-                
-                print(f"{obj.username} inactive for: {duration}")
-                return duration
-        except Exception as e:
-            print(f"Error calculating inactive duration for {obj.username}: {e}")
+                    return f"{minutes}m ago"
+        except:
+            pass
         return "Never logged in"
-    
+
     def get_registration_date(self, obj):
         try:
             profile = obj.profile
@@ -112,12 +105,22 @@ class UserDetailedSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "password"]
-        extra_kwargs = {"password": {"write_only": True}}
+        fields = ["id", "username", "password", "email"]
+        extra_kwargs = {
+            "password": {"write_only": True},
+            "email": {"required": False}
+        }
 
     def create(self, validated_data):
-        print(validated_data)
-        user = User.objects.create_user(**validated_data)
+        print(f"Creating user: {validated_data['username']}")
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data.get('email', ''),
+            password=validated_data['password']
+        )
+        # Creates a profile
+        UserProfile.objects.get_or_create(user=user)
+        print(f"User created: {user.username}")
         return user
 
 

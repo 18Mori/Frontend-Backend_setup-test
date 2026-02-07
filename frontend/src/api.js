@@ -9,7 +9,13 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem(ACCESS_TOKEN);
+    // Check admin, then regular users
+    const sessionToken = sessionStorage.getItem(ACCESS_TOKEN);
+    const localToken = localStorage.getItem(ACCESS_TOKEN) || localStorage.getItem("access");
+    const token = sessionToken || localToken;
+
+    console.log("🔐 API Request - Using token from:", sessionToken ? "sessionStorage" : "localStorage");
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

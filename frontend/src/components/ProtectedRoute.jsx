@@ -1,57 +1,89 @@
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
 import api from "../api";
-import { REFRESH_TOKEN, ACCESS_TOKEN } from "../constants";
-import { useState, useEffect } from "react";
+import { ACCESS_TOKEN } from "../constants";
 
+function ProtectedRoute({ children, adminOnly = false }) {
+  const [loading, setLoading] = useState(true);
+  const [allowed, setAllowed] = useState(false);
 
-function ProtectedRoute({ children }) {
-    const [isAuthorized, setIsAuthorized] = useState(null);
+  useEffect(() => {
+    const check = async () => {
+      // Checks sessionStorage first then localStorage
+      const sessionToken = sessionStorage.getItem(ACCESS_TOKEN);
+      const localToken = localStorage.getItem(ACCESS_TOKEN) || localStorage.getItem("access");
+      const token = sessionToken || localToken;
 
-    useEffect(() => {
-        auth().catch(() => setIsAuthorized(false))
-    }, [])
+      console.log("ProtectedRoute check - Token exists?", !!token);
+      console.log("From sessionStorage?", !!sessionToken);
+      console.log("From localStorage?", !!localToken);
+      console.log("AdminOnly required?", adminOnly);
 
-    const refreshToken = async () => {
-        const refreshToken = localStorage.getItem(REFRESH_TOKEN);
-        try {
-            const res = await api.post("/api/token/refresh/", {
-                refresh: refreshToken,
-            });
-            if (res.status === 200) {
-                localStorage.setItem(ACCESS_TOKEN, res.data.access)
-                setIsAuthorized(true)
-            } else {
-                setIsAuthorized(false)
-            }
-        } catch (error) {
-            console.log(error);
-            setIsAuthorized(false);
-        }
-    };
+      if (!token) {
+        console.log("No token found, redirecting to login");
+        setAllowed(false);
+        setLoading(false);
+        return;
+      }
 
-    const auth = async () => {
-        const token = localStorage.getItem(ACCESS_TOKEN);
-        if (!token) {
-            setIsAuthorized(false);
-            return;
-        }
-        const decoded = jwtDecode(token);
-        const tokenExpiration = decoded.exp;
-        const now = Date.now() / 1000;
+      try {
+        const res = await api.get("api/user/me/");
+        console.log("User check - Username:", res.data.username);
+        console.log("Is superuser?", res.data.is_superuser);
+        console.log("Is staff?", res.data.is_staff);
 
-        if (tokenExpiration < now) {
-            await refreshToken();
+        const userIsAdmin = res.data.is_superuser || res.data.is_staff;
+
+        if (adminOnly) {
+          if (userIsAdmin) {
+            console.log("Admin access granted");
+            setAllowed(true);
+          } else {
+            console.log("Non-admin redirecting to /");
+            setAllowed(false);
+            // Redirect normal users to home
+            setTimeout(() => {
+              window.location.href = "/";
+            }, 500);
+          }
         } else {
-            setIsAuthorized(true);
+          console.log("Regular access granted");
+          setAllowed(true);
         }
+      } catch (err) {
+        console.error("Error fetching user:", err.response?.status, err.message);
+        console.error("   Response:", err.response?.data);
+        setAllowed(false);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    if (isAuthorized === null) {
-        return <div style={{ textAlign: 'center', padding: '50px' }}>Loading...</div>;
-    }
+    check();
+  }, [adminOnly]);
 
-    return isAuthorized ? children : <Navigate to="/login" replace />;
+  if (loading) {
+    return (
+      <div style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        fontSize: "18px",
+        color: "#666"
+      }}>
+        Loading...
+      </div>
+    );
+  }
+
+  if (!allowed) {
+    console.log("Access denied, returning to login");
+    return <Navigate to="/login" replace />;
+  }
+
+  console.log("Rendering protected content");
+  return children;
 }
 
 export default ProtectedRoute;

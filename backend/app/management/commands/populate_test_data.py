@@ -4,6 +4,7 @@ from app.models import Note, UserProfile
 from django.utils import timezone
 from datetime import timedelta
 
+    # python manage.py populate_test_data
 class Command(BaseCommand):
     help = 'Populate test data with users and notes'
 

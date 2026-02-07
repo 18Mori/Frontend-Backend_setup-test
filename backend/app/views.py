@@ -10,81 +10,58 @@ from rest_framework.views import APIView
 
 
 class CreateUserView(generics.CreateAPIView):
+    """Allow anyone to register without authentication"""
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
+    authentication_classes = []
     
     def perform_create(self, serializer):
         user = serializer.save()
         profile, created = UserProfile.objects.get_or_create(user=user)
         if created:
-            print(f"✅ UserProfile created for {user.username}")
-        
+            print(f"UserProfile created for {user.username}")
+        print(f"User registered: {user.username}")
+
 class UserListView(generics.ListAPIView):
     queryset = User.objects.all().prefetch_related('notes').select_related('profile')
     serializer_class = UserDetailedSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def list(self, request, *args, **kwargs):
-        response = super().list(request, *args, **kwargs)
-        print(f"📊 Returning {len(response.data)} users")
-        for user_data in response.data:
-            print(f"   User: {user_data['username']}, Notes: {user_data['notes_count']}, Active: {user_data['is_currently_active']}")
-        return response
+    permission_classes = [IsAdminUser]
 
 class UserDetailView(generics.RetrieveAPIView):
     queryset = User.objects.all().prefetch_related('notes').select_related('profile')
     serializer_class = UserDetailedSerializer
-    permission_classes = [IsAuthenticated]
-    
+    permission_classes = [IsAdminUser]
     lookup_field = "id"
-    def retrieve(self, request, *args, **kwargs):
-        response = super().retrieve(request, *args, **kwargs)
-        user_data = response.data
-        print(f"👤 User Detail: {user_data['username']}")
-        print(f"   Notes: {user_data['notes']}")
-        print(f"   Profile: {user_data['profile']}")
-        return response
 
 class UserDeleteView(generics.DestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserDetailedSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
     lookup_field = "id"
-    
+
 class NoteListCreate(generics.ListCreateAPIView):
     serializer_class = NoteSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
         return Note.objects.filter(author=self.request.user)
 
     def perform_create(self, serializer):
-        if serializer.is_valid():
-            note = serializer.save(author=self.request.user)
-            print(f"✅ Note created: {note.title} by {self.request.user.username}")
-        else:
-            print(serializer.errors)
-            
-    serializer_class = NoteSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-        return Note.objects.filter(author=self.request.user)
+        note = serializer.save(author=self.request.user)
+        print(f"Note created: {note.title} by {self.request.user.username}")
 
 class NoteDelete(generics.DestroyAPIView):
     serializer_class = NoteSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
         return Note.objects.filter(author=self.request.user)
 
 class CurrentUserView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+        print(f"Fetching current user: {request.user.username}")
         serializer = UserDetailedSerializer(request.user)
         return Response(serializer.data)

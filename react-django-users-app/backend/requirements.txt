@@ -1,5 +1,0 @@
-Django==4.2
-djangorestframework==3.14.0
-psycopg2-binary==2.9.6
-corsheaders==3.14.0
-django-environ==0.8.1
