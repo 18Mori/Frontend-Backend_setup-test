@@ -150,8 +150,112 @@ ADMIN_PASSWORD=secure_password_123
 VITE_API_URL=http://127.0.0.1:8000
 
 # For Production (uncomment when deploying)
+
 # VITE_API_URL=https://your-backend-api.onrender.com
 
 ```
 
 ---
+
+
+## 🛠 Installation & Setup
+
+### 1. Clone the Repository
+
+Start by grabbing the code and moving into the project root:
+
+```bash
+git clone https://github.com/your-username/your-repo-name.git
+cd your-repo-name
+
+```
+
+### 2. Backend Configuration
+
+The backend handles the API, JWT logic, and PostgreSQL connection.
+
+```bash
+# Navigate to backend
+cd backend
+
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Setup Environment Variables
+# Copy the example file and fill in your PostgreSQL credentials
+cp .env.example .env
+
+# Run migrations and start server
+python manage.py migrate
+python manage.py runserver
+
+```
+
+### 3. Frontend Configuration
+
+The frontend is built with Vite for speed and optimized builds.
+
+```bash
+# Navigate to frontend
+cd ../frontend
+
+# Install dependencies
+npm install
+
+# Setup Environment Variables
+cp .env.example .env
+
+# Launch the development server
+npm run dev
+
+```
+
+---
+
+## 🏗 Database & Admin Setup
+
+Since this project uses PostgreSQL, ensure your local Postgres service is running before migrating.
+
+**Creating the Superuser:**
+I have included a custom management command to seed the admin user from your `.env` file:
+
+```bash
+python manage.py create_admin
+
+```
+
+*Alternatively, use the standard command:* `python manage.py createsuperuser`
+
+---
+
+## 🚢 Deployment Notes
+
+This architecture is "Deployment Ready":
+
+* **Backend:** Optimized for **Render** or **Railway** using `gunicorn` and `whitenoise` for static files.
+* **Frontend:** Optimized for **Vercel** or **Netlify**.
+* **Database:** Designed to connect to external PostgreSQL instances (like Supabase or Render DB) via the `DATABASE_URL` variable.
+
+---
+
+## 🤝 Contributing
+
+This is a personal reference project, but feel free to fork it!
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+### One last thing:
+
+Do you have a `requirements.txt` file ready in your backend folder? If not, you can generate it by running `pip freeze > requirements.txt` while your virtual environment is active.
+
+**Would you like me to help you write the `create_admin` custom Django command so the `python manage.py create_admin` step actually works?**
