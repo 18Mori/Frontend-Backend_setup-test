@@ -1,4 +1,4 @@
-function NotFound() {
+function Notfound() {
     return (
     <>
         <div className="relative">
@@ -16,4 +16,4 @@ function NotFound() {
     )
 }
 
-export default NotFound
+export default Notfound
