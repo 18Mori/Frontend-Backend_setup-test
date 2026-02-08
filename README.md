@@ -254,8 +254,13 @@ This is a personal reference project, but feel free to fork it!
 
 ---
 
-### One last thing:
 
-Do you have a `requirements.txt` file ready in your backend folder? If not, you can generate it by running `pip freeze > requirements.txt` while your virtual environment is active.
+## 🚀 * Deployment & Live Links
 
-**Would you like me to help you write the `create_admin` custom Django command so the `python manage.py create_admin` step actually works?**
+| Component | Platform | URL |
+| --- | --- | --- |
+| **Frontend** | Vercel | [View](https://frontend-note-app.onrender.com) |
+| **Backend/API** | Render | [View](https://note-app-90m9.onrender.com) |
+| **Database** | Supabase | *Managed Instance* |
+
+---
