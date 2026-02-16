@@ -54,10 +54,14 @@ python -m venv myenv
 # Activate (Mac/Linux)
 source myenv/bin/activate  
 # Activate (Windows)
-myenv\Scripts\activate 
+myenv/Scripts/activate 
 
 # Install dependencies
 pip install django djangorestframework django-cors-headers djangorestframework-simplejwt psycopg2-binary gunicorn python-dotenv dj-database-url whitenoise
+
+# Create project & app
+django-admin startproject core .
+python manage.py startapp myapp
 
 # Database initialization
 python manage.py makemigrations
